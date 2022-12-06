@@ -86,7 +86,38 @@ to go
   tick
 end
 
-t
+to infect-susceptibles
+  ask mosquitos with [infected?]
+    [ ask monkeys-here with [ not infected? and not immune? ]
+     [ if random-float 1 < transmissibility
+        [ set infected? true ] ] ]
+  ask mosquitos with [infected?]
+    [ ask humans-here with [ not infected? and not immune? ]
+     [ if random-float 1 < transmissibility
+        [ set infected? true ] ] ]
+  ask humans with [infected?]
+    [ ask mosquitos-here with [ not infected? and not immune? ]
+     [ if random-float 1 < transmissibility
+        [ set infected? true ] ] ]
+  ask monkeys with [infected?]
+    [ ask mosquitos-here with [ not infected? and not immune? ]
+     [ if random-float 1 < transmissibility
+        [ set infected? true ] ] ]
+end
+
+end
+
+to recover-infected
+end
+
+to recolor
+end
+
+to move
+end
+
+to calculate-max-infected
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210

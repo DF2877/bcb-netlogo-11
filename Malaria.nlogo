@@ -87,6 +87,22 @@ to go
 end
 
 to infect-susceptibles
+  ask mosquitos with [infected?]
+    [ ask monkeys-here with [ not infected? and not immune? ]
+     [ if random-float 1 < transmissibility
+        [ set infected? true ] ] ]
+  ask mosquitos with [infected?]
+    [ ask humans-here with [ not infected? and not immune? ]
+     [ if random-float 1 < transmissibility
+        [ set infected? true ] ] ]
+  ask humans with [infected?]
+    [ ask mosquitos-here with [ not infected? and not immune? ]
+     [ if random-float 1 < transmissibility
+        [ set infected? true ] ] ]
+  ask monkeys with [infected?]
+    [ ask mosquitos-here with [ not infected? and not immune? ]
+     [ if random-float 1 < transmissibility
+        [ set infected? true ] ] ]
 end
 
 to recover-infected
@@ -201,6 +217,21 @@ init-infected
 10
 1.0
 1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+9
+261
+181
+294
+transmissibility
+transmissibility
+0
+1
+0.5
+.01
 1
 NIL
 HORIZONTAL
