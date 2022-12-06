@@ -13,6 +13,7 @@ turtles-own [
 
 to setup
   ca
+  reset-ticks
   setup-patches
   setup-humans
   setup-monkeys
@@ -105,16 +106,22 @@ to infect-susceptibles
         [ set infected? true ] ] ]
 end
 
-end
-
 to recover-infected
 end
 
 to recolor
+  ask turtles with [infected?]
+  [ set color red]
 end
 
-to move
+
+to move ;; temporary placeholder movement
+  ask turtles [
+    right random 360 ;;get a new random heading
+    forward 1
+  ]
 end
+
 
 to calculate-max-infected
 end
@@ -140,8 +147,8 @@ GRAPHICS-WINDOW
 16
 -16
 16
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -222,6 +229,38 @@ init-infected
 1
 NIL
 HORIZONTAL
+
+SLIDER
+9
+261
+181
+294
+transmissibility
+transmissibility
+0
+1
+0.5
+.01
+1
+NIL
+HORIZONTAL
+
+BUTTON
+89
+17
+152
+50
+Go
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
