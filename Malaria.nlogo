@@ -17,6 +17,7 @@ to setup
   setup-humans
   setup-monkeys
   setup-mosquitos
+  setup-infected
 end
 
 to setup-patches
@@ -59,6 +60,13 @@ to setup-mosquitos
     set infected? false
     set immune? false
     setxy random-pxcor random-pycor
+  ]
+end
+
+to setup-infected
+  ask n-of init-infected monkeys [
+   set color red
+   set infected? true
   ]
 end
 @#$#@#$#@
@@ -146,6 +154,21 @@ num-mos
 0
 100
 25.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+8
+214
+180
+247
+init-infected
+init-infected
+0
+10
+1.0
 1
 1
 NIL

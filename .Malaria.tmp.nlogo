@@ -53,7 +53,13 @@ to setup-monkeys
 end
 
 to setup-mosquitos
-\
+  create-mosquitos num-mos [
+    set color white
+    set shape "default"
+    set infected? false
+    set immune? false
+    setxy random-pxcor random-pycor
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
