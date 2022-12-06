@@ -17,6 +17,7 @@ to setup
   setup-humans
   setup-monkeys
   setup-mosquitos
+  setup-infected
 end
 
 to setup-patches
@@ -61,6 +62,31 @@ to setup-mosquitos
     setxy random-pxcor random-pycor
   ]
 end
+
+to setup-infected
+  ask n-of init-infected monkeys [
+   set color red
+   set infected? true
+  ]
+end
+
+to go
+  ;;stop if everyone or noone is infected
+  if (count turtles with [infected?] = 0)
+  or (count turtles with [infected?] = count turtles)
+  or (ticks = 500)
+  [stop]
+
+  infect-susceptibles
+  recover-infected
+  recolor
+
+  move
+  calculate-max-infected
+  tick
+end
+
+t
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -146,6 +172,21 @@ num-mos
 0
 100
 25.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+8
+214
+180
+247
+init-infected
+init-infected
+0
+10
+1.0
 1
 1
 NIL

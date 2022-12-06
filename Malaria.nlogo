@@ -69,6 +69,37 @@ to setup-infected
    set infected? true
   ]
 end
+
+to go
+  ;;stop if everyone or noone is infected
+  if (count turtles with [infected?] = 0)
+  or (count turtles with [infected?] = count turtles)
+  or (ticks = 500)
+  [stop]
+
+  infect-susceptibles
+  recover-infected
+  recolor
+
+  move
+  calculate-max-infected
+  tick
+end
+
+to infect-susceptibles
+end
+
+to recover-infected
+end
+
+to recolor
+end
+
+to move
+end
+
+to calculate-max-infected
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
