@@ -3,7 +3,7 @@ globals [
 ]
 
 breed [humans human]
-breed [monkeys monkey]
+breed [apes ape]
 breed [mosquitos mosquito]
 
 turtles-own [
@@ -16,19 +16,19 @@ to setup
   reset-ticks
   setup-patches
   setup-humans
-  setup-monkeys
+  setup-apes
   setup-mosquitos
   setup-infected
 end
 
 to setup-patches
   ask patch 8 8 [
-    ask n-of 50 patches in-radius 7 [
+    ask n-of 100 patches in-radius 7 [
       set pcolor green
     ]
   ]
   ask patch -8 -8 [
-    ask n-of 50 patches in-radius 7 [
+    ask n-of 100 patches in-radius 7 [
       set pcolor brown
     ]
   ]
@@ -44,8 +44,8 @@ to setup-humans
   ]
 end
 
-to setup-monkeys
-  create- num-apes [
+to setup-apes
+  create-apes num-apes [
     set color white
     set shape "squirrel"
     set infected? false
@@ -83,6 +83,8 @@ to go
   recolor
 
   move
+  move-humans
+  move-apes
   tick
 end
 
@@ -163,9 +165,29 @@ end
 
 
 to move ;; temporary placeholder movement
-  ask turtles [
+  ask mosquitos [
     right random 360 ;;get a new random heading
     forward 1
+  ]
+end
+
+to move-humans
+  ask humans [
+    ifelse pcolor = brown
+    [right (random 360)
+    forward 2]
+    [right (random 11) - 5
+    forward 1]
+  ]
+end
+
+to move-apes
+  ask apes [
+    ifelse pcolor = green
+    [right (random 11) - 5
+    forward 1]
+    [right (random 360) - 90
+    forward 2]
   ]
 end
 @#$#@#$#@
@@ -233,8 +255,8 @@ SLIDER
 108
 185
 141
-num-monkeys
-num-monkeys
+num-apes
+num-apes
 0
 100
 25.0

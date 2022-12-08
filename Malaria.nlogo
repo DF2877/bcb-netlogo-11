@@ -23,12 +23,12 @@ end
 
 to setup-patches
   ask patch 8 8 [
-    ask n-of 50 patches in-radius 7 [
+    ask n-of 100 patches in-radius 7 [
       set pcolor green
     ]
   ]
   ask patch -8 -8 [
-    ask n-of 50 patches in-radius 7 [
+    ask n-of 100 patches in-radius 7 [
       set pcolor brown
     ]
   ]
@@ -83,6 +83,8 @@ to go
   recolor
 
   move
+  move-humans
+  move-apes
   tick
 end
 
@@ -163,9 +165,29 @@ end
 
 
 to move ;; temporary placeholder movement
-  ask turtles [
+  ask mosquitos [
     right random 360 ;;get a new random heading
     forward 1
+  ]
+end
+
+to move-humans
+  ask humans [
+    ifelse pcolor = brown
+    [right (random 11) - 5
+    forward 1]
+    [right (random 360)
+    forward 2]
+  ]
+end
+
+to move-apes
+  ask apes [
+    ifelse pcolor = green
+    [right (random 11) - 5
+    forward 1]
+    [right (random 360)
+    forward 2]
   ]
 end
 @#$#@#$#@
