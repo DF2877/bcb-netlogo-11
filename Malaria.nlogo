@@ -1,9 +1,9 @@
 globals [
-
+  deaths
 ]
 
 breed [humans human]
-breed [monkeys monkey]
+breed [apes ape]
 breed [mosquitos mosquito]
 
 turtles-own [
@@ -16,7 +16,7 @@ to setup
   reset-ticks
   setup-patches
   setup-humans
-  setup-monkeys
+  setup-apes
   setup-mosquitos
   setup-infected
 end
@@ -44,8 +44,8 @@ to setup-humans
   ]
 end
 
-to setup-monkeys
-  create-monkeys num-monkeys [
+to setup-apes
+  create-apes num-apes [
     set color white
     set shape "squirrel"
     set infected? false
@@ -55,7 +55,7 @@ to setup-monkeys
 end
 
 to setup-mosquitos
-  create-mosquitos num-mos [
+  create-mosquitos num-mosquitos [
     set color white
     set shape "default"
     set infected? false
@@ -65,7 +65,7 @@ to setup-mosquitos
 end
 
 to setup-infected
-  ask n-of init-infected monkeys [
+  ask n-of init-infected apes [
    set color red
    set infected? true
   ]
@@ -83,13 +83,12 @@ to go
   recolor
 
   move
-  calculate-max-infected
   tick
 end
 
 to infect-susceptibles
   ask mosquitos with [infected?]
-    [ ask monkeys-here with [ not infected? and not immune? ]
+    [ ask apes-here with [ not infected? and not immune? ]
      [ if random-float 1 < transmissibility
         [ set infected? true ] ] ]
   ask mosquitos with [infected?]
@@ -100,14 +99,62 @@ to infect-susceptibles
     [ ask mosquitos-here with [ not infected? and not immune? ]
      [ if random-float 1 < transmissibility
         [ set infected? true ] ] ]
-  ask monkeys with [infected?]
+  ask apes with [infected?]
     [ ask mosquitos-here with [ not infected? and not immune? ]
      [ if random-float 1 < transmissibility
         [ set infected? true ] ] ]
 end
 
-to recover-infected
+to recover-infected ;;I -> R
+  ask humans with [infected?]
+  [
+    if random-float 1 < death-rate [
+      set deaths deaths + 1
+      die]
+    if random-float 1 < recovery-rate
+    [
+      set infected? false
+      ifelse immunity-is-acquired?
+      [
+        set immune? true
+        set color gray
+      ]
+      [
+        set color white
+      ]
+    ]
+  ]
+  ask apes with [infected?]
+  [
+    if random-float 1 < death-rate [
+      set deaths deaths + 1
+      die]
+    if random-float 1 < recovery-rate
+    [
+      set infected? false
+      ifelse immunity-is-acquired?
+      [
+        set immune? true
+        set color gray
+      ]
+      [
+        set color white
+      ]
+    ]
+  ]
+  ask mosquitos with [infected?]
+  [
+    if random-float 1 < death-rate [
+      set deaths deaths + 1
+      die]
+    if random-float 1 < recovery-rate
+    [
+      set infected? false
+      set color white
+    ]
+  ]
 end
+
 
 to recolor
   ask turtles with [infected?]
@@ -121,16 +168,12 @@ to move ;; temporary placeholder movement
     forward 1
   ]
 end
-
-
-to calculate-max-infected
-end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
-10
-647
-448
+501
+14
+938
+452
 -1
 -1
 13.0
@@ -190,8 +233,8 @@ SLIDER
 108
 185
 141
-num-monkeys
-num-monkeys
+num-apes
+num-apes
 0
 100
 25.0
@@ -205,8 +248,8 @@ SLIDER
 161
 182
 194
-num-mos
-num-mos
+num-mosquitos
+num-mosquitos
 0
 100
 25.0
@@ -261,6 +304,47 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+228
+60
+400
+93
+death-rate
+death-rate
+0
+1
+0.0
+0.001
+1
+NIL
+HORIZONTAL
+
+SLIDER
+229
+105
+401
+138
+recovery-rate
+recovery-rate
+0
+1
+0.01
+0.01
+1
+NIL
+HORIZONTAL
+
+SWITCH
+228
+150
+402
+183
+immunity-is-acquired?
+immunity-is-acquired?
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
