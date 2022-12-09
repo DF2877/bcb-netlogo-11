@@ -9,6 +9,9 @@ breed [mosquitos mosquito]
 turtles-own [
   infected?
   immune?
+  prey
+  nearest-prey
+  hungry?
 ]
 
 to setup
@@ -22,13 +25,13 @@ to setup
 end
 
 to setup-patches
-  ask patch 8 8 [
-    ask n-of 100 patches in-radius 7 [
+  ask patch 13 13 [
+    ask n-of 400 patches in-radius 12 [
       set pcolor green
     ]
   ]
-  ask patch -8 -8 [
-    ask n-of 100 patches in-radius 7 [
+  ask patch -13 -13 [
+    ask n-of 400 patches in-radius 12 [
       set pcolor brown
     ]
   ]
@@ -40,7 +43,7 @@ to setup-humans
     set shape "person"
     set infected? false
     set immune? false
-    setxy -8 -8
+    setxy random-pxcor random-pycor
   ]
 end
 
@@ -50,7 +53,7 @@ to setup-apes
     set shape "squirrel"
     set infected? false
     set immune? false
-    setxy 8 8
+    setxy random-pxcor random-pycor
   ]
 end
 
@@ -61,6 +64,7 @@ to setup-mosquitos
     set infected? false
     set immune? false
     setxy random-pxcor random-pycor
+    set hungry? false
   ]
 end
 
@@ -75,7 +79,7 @@ to go
   ;;stop if everyone or noone is infected
   if (count turtles with [infected?] = 0)
   or (count turtles with [infected?] = count turtles)
-  or (ticks = 500)
+  or (ticks = 5000)
   [stop]
 
   infect-susceptibles
@@ -83,8 +87,6 @@ to go
   recolor
 
   move
-  move-humans
-  move-apes
   tick
 end
 
@@ -165,29 +167,68 @@ end
 
 
 to move ;; temporary placeholder movement
-  ask mosquitos [
-    right random 360 ;;get a new random heading
-    forward 1
-  ]
+  move-humans
+  move-apes
+  move-mosquitos
 end
 
 to move-humans
   ask humans [
-    ifelse pcolor = brown
-    [right (random 11) - 5
-    forward 1]
-    [right (random 360)
-    forward 2]
+    ifelse (random-float 1) > 0.02 [
+      ifelse pcolor = brown
+      [right (random 181) - 90
+        forward 0.25]
+      [right (random 11) - 5
+        forward 0.5]
+    ] [
+      facexy -13 -13
+    ]
+
   ]
 end
 
 to move-apes
   ask apes [
-    ifelse pcolor = green
-    [right (random 11) - 5
-    forward 1]
-    [right (random 360)
-    forward 2]
+    ifelse (random-float 1) > 0.02 [
+      ifelse pcolor = green
+      [right (random 181) - 90
+        forward 0.25]
+      [right (random 11) - 5
+        forward 0.5]
+    ] [
+      facexy 13 13
+    ]
+  ]
+end
+
+to find-prey
+  set prey other turtles with [not member? self mosquitos]
+end
+
+to find-nearest-prey ;; turtle procedure
+  find-prey
+  set nearest-prey min-one-of prey [distance myself]
+end
+
+to move-mosquitos
+  ask mosquitos [
+    ifelse hungry? [
+      find-nearest-prey
+      face nearest-prey
+      forward 1
+      feed
+    ] [
+      right (random 91) - 45
+      forward 0.75
+      if (random-float 1) < 0.02 [set hungry? true]
+    ]
+
+  ]
+end
+
+to feed
+  if distance nearest-prey < 1 [
+    if (random-float 1) > 0.2 [set hungry? false]
   ]
 end
 @#$#@#$#@
@@ -198,7 +239,7 @@ GRAPHICS-WINDOW
 452
 -1
 -1
-13.0
+6.6
 1
 10
 1
@@ -208,10 +249,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
--16
-16
+-32
+32
+-32
+32
 1
 1
 1
@@ -325,7 +366,7 @@ NIL
 NIL
 NIL
 NIL
-1
+0
 
 SLIDER
 228
@@ -336,8 +377,8 @@ death-rate
 death-rate
 0
 1
-0.0
-0.001
+2.0E-4
+0.0001
 1
 NIL
 HORIZONTAL
@@ -351,8 +392,8 @@ recovery-rate
 recovery-rate
 0
 1
-0.01
-0.01
+0.002
+0.001
 1
 NIL
 HORIZONTAL
