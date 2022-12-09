@@ -1,5 +1,6 @@
 globals [
   deaths
+  num-turtles
 ]
 
 breed [humans human]
@@ -12,6 +13,7 @@ turtles-own [
   prey
   nearest-prey
   hungry?
+  return-rate
 ]
 
 to setup
@@ -22,6 +24,7 @@ to setup
   setup-apes
   setup-mosquitos
   setup-infected
+  set num-turtles num-people + num-apes + num-mosquitos
 end
 
 to setup-patches
@@ -82,7 +85,7 @@ to go
   or (ticks = 5000)
   [stop]
 
-  infect-susceptibles
+  ;infect-susceptibles
   recover-infected
   recolor
 
@@ -91,20 +94,20 @@ to go
 end
 
 to infect-susceptibles
-  ask mosquitos with [infected?]
+  if infected?
     [ ask apes-here with [ not infected? and not immune? ]
      [ if random-float 1 < transmissibility
         [ set infected? true ] ] ]
-  ask mosquitos with [infected?]
+  if infected?
     [ ask humans-here with [ not infected? and not immune? ]
      [ if random-float 1 < transmissibility
         [ set infected? true ] ] ]
-  ask humans with [infected?]
-    [ ask mosquitos-here with [ not infected? and not immune? ]
+  if count humans-here with [infected?] > 0
+    [ if not infected? and not immune?
      [ if random-float 1 < transmissibility
         [ set infected? true ] ] ]
-  ask apes with [infected?]
-    [ ask mosquitos-here with [ not infected? and not immune? ]
+  if count apes-here with [infected?] > 0
+    [ if not infected? and not immune?
      [ if random-float 1 < transmissibility
         [ set infected? true ] ] ]
 end
@@ -148,9 +151,6 @@ to recover-infected ;;I -> R
   ]
   ask mosquitos with [infected?]
   [
-    if random-float 1 < death-rate [
-      set deaths deaths + 1
-      die]
     if random-float 1 < recovery-rate
     [
       set infected? false
@@ -166,7 +166,7 @@ to recolor
 end
 
 
-to move ;; temporary placeholder movement
+to move ;; call individual species movement
   move-humans
   move-apes
   move-mosquitos
@@ -174,7 +174,8 @@ end
 
 to move-humans
   ask humans [
-    ifelse (random-float 1) > 0.02 [
+    ifelse infected? [set return-rate 0.] [set return-rate 0.02]
+    ifelse (random-float 1) > return-rate [
       ifelse pcolor = brown
       [right (random 181) - 90
         forward 0.25]
@@ -182,6 +183,7 @@ to move-humans
         forward 0.5]
     ] [
       facexy -13 -13
+      forward 0.25
     ]
 
   ]
@@ -189,7 +191,8 @@ end
 
 to move-apes
   ask apes [
-    ifelse (random-float 1) > 0.02 [
+    ifelse infected? [set return-rate 0.1] [set return-rate 0.02]
+    ifelse (random-float 1) > return-rate [
       ifelse pcolor = green
       [right (random 181) - 90
         forward 0.25]
@@ -197,6 +200,7 @@ to move-apes
         forward 0.5]
     ] [
       facexy 13 13
+      forward 0.25
     ]
   ]
 end
@@ -228,18 +232,21 @@ end
 
 to feed
   if distance nearest-prey < 1 [
-    if (random-float 1) > 0.2 [set hungry? false]
+    if (random-float 1) > 0.2 [
+      set hungry? false
+      infect-susceptibles
+    ]
   ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-501
-14
-938
-452
+370
+10
+950
+591
 -1
 -1
-6.6
+8.8
 1
 10
 1
@@ -285,77 +292,77 @@ num-people
 num-people
 0
 100
-25.0
+100.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-13
-108
-185
-141
+5
+95
+177
+128
 num-apes
 num-apes
 0
 100
-25.0
+100.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-10
-161
-182
-194
+5
+136
+177
+169
 num-mosquitos
 num-mosquitos
 0
 100
-25.0
+50.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-8
-214
-180
-247
+4
+178
+176
+211
 init-infected
 init-infected
 0
 10
+4.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+183
+179
+355
+212
+transmissibility
+transmissibility
+0
+1
 1.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-9
-261
-181
-294
-transmissibility
-transmissibility
-0
-1
-0.5
 .01
 1
 NIL
 HORIZONTAL
 
 BUTTON
-89
-17
-152
-50
+79
+10
+142
+43
 Go
 go
 T
@@ -369,45 +376,65 @@ NIL
 0
 
 SLIDER
-228
-60
-400
-93
+185
+53
+357
+86
 death-rate
 death-rate
 0
 1
-2.0E-4
-0.0001
+0.003
+0.001
 1
 NIL
 HORIZONTAL
 
 SLIDER
-229
-105
-401
-138
+185
+95
+357
+128
 recovery-rate
 recovery-rate
 0
 1
-0.002
+0.001
 0.001
 1
 NIL
 HORIZONTAL
 
 SWITCH
-228
-150
-402
-183
+184
+137
+358
+170
 immunity-is-acquired?
 immunity-is-acquired?
 0
 1
 -1000
+
+PLOT
+5
+223
+360
+494
+Infection
+Time
+Proportion infected
+0.0
+10.0
+0.0
+1.0
+true
+true
+"" ""
+PENS
+"infected" 1.0 0 -2674135 true "" "plot (count turtles with [infected?]) / num-turtles"
+"susceptible" 1.0 0 -16777216 true "" "plot (count turtles with [not infected? and not immune?]) / num-turtles"
+"imune" 1.0 0 -7500403 true "" "plot (count turtles with [immune?]) / num-turtles"
 
 @#$#@#$#@
 ## WHAT IS IT?
