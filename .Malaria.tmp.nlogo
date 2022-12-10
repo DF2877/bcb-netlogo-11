@@ -1,6 +1,7 @@
 globals [
   deaths
   num-turtles
+  max-infected
 ]
 
 breed [humans human]
@@ -14,6 +15,9 @@ turtles-own [
   nearest-prey
   hungry?
   return-rate
+  sc1?
+  sc2?
+  death-chance
 ]
 
 to setup
@@ -24,7 +28,8 @@ to setup
   setup-apes
   setup-mosquitos
   setup-infected
-  set num-turtles num-people + num-apes + num-mosquitos
+  set num-turtles (num-people + num-apes + num-mosquitos)
+  set max-infected (count turtles with [infected?])
 end
 
 to setup-patches
@@ -46,6 +51,8 @@ to setup-humans
     set shape "person"
     set infected? false
     set immune? false
+    ifelse (random-float 1) < sickle-cell-rate [set sc1? true] [set sc1? false]
+    ifelse (random-float 1) < sickle-cell-rate [set sc2? true] [set sc2? false]
     setxy random-pxcor random-pycor
   ]
 end
@@ -56,6 +63,8 @@ to setup-apes
     set shape "squirrel"
     set infected? false
     set immune? false
+    ifelse (random-float 1) < sickle-cell-rate [set sc1? true] [set sc1? false]
+    ifelse (random-float 1) < sickle-cell-rate [set sc2? true] [set sc2? false]
     setxy random-pxcor random-pycor
   ]
 end
@@ -66,8 +75,10 @@ to setup-mosquitos
     set shape "default"
     set infected? false
     set immune? false
-    setxy random-pxcor random-pycor
     set hungry? false
+    set sc1? false
+    set sc2? false
+    setxy random-pxcor random-pycor
   ]
 end
 
@@ -90,6 +101,7 @@ to go
   recolor
 
   move
+  calculate-max-infected
   tick
 end
 
@@ -115,7 +127,16 @@ end
 to recover-infected ;;I -> R
   ask humans with [infected?]
   [
-    if random-float 1 < death-rate [
+    ifelse sc1? and sc2? [
+      set death-chance (random-float 1) / sickle-cell-protection
+    ] [
+      ifelse sc1? or sc2? [
+        set death-chance (random-float 1) * sickle-cell-protection
+      ] [
+        set death-chance random-float 1
+      ]
+    ]
+    if death-chance > (1 - death-rate) [
       set deaths deaths + 1
       die]
     if random-float 1 < recovery-rate
@@ -174,7 +195,7 @@ end
 
 to move-humans
   ask humans [
-    ifelse infected? [set return-rate 0.] [set return-rate 0.02]
+    ifelse infected? [set return-rate 0.03] [set return-rate 0.02]
     ifelse (random-float 1) > return-rate [
       ifelse pcolor = brown
       [right (random 181) - 90
@@ -191,7 +212,7 @@ end
 
 to move-apes
   ask apes [
-    ifelse infected? [set return-rate 0.1] [set return-rate 0.02]
+    ifelse infected? [set return-rate 0.03] [set return-rate 0.02]
     ifelse (random-float 1) > return-rate [
       ifelse pcolor = green
       [right (random 181) - 90
@@ -224,7 +245,7 @@ to move-mosquitos
     ] [
       right (random 91) - 45
       forward 0.75
-      if (random-float 1) < 0.02 [set hungry? true]
+      if (random-float 1) < 0.05 [set hungry? true]
     ]
 
   ]
@@ -232,11 +253,21 @@ end
 
 to feed
   if distance nearest-prey < 1 [
-    if (random-float 1) > 0.2 [
+    if (random-float 1) > 0.5 [
       set hungry? false
       infect-susceptibles
     ]
   ]
+end
+
+to calculate-max-infected
+  let x (count turtles with [infected?])
+  if x > max-infected
+  [set max-infected x]
+end
+
+to-report max-infected-prop
+  report max-infected / num-turtles
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -337,7 +368,7 @@ init-infected
 init-infected
 0
 10
-4.0
+10.0
 1
 1
 NIL
@@ -352,7 +383,7 @@ transmissibility
 transmissibility
 0
 1
-1.0
+0.32
 .01
 1
 NIL
@@ -418,12 +449,12 @@ immunity-is-acquired?
 
 PLOT
 5
-223
+281
 360
-494
+552
 Infection
 Time
-Proportion infected
+Proportion
 0.0
 10.0
 0.0
@@ -435,6 +466,71 @@ PENS
 "infected" 1.0 0 -2674135 true "" "plot (count turtles with [infected?]) / num-turtles"
 "susceptible" 1.0 0 -16777216 true "" "plot (count turtles with [not infected? and not immune?]) / num-turtles"
 "imune" 1.0 0 -7500403 true "" "plot (count turtles with [immune?]) / num-turtles"
+"deaths" 1.0 0 -6459832 true "" "plot (num-turtles - (count turtles)) / num-turtles"
+"pen-4" 1.0 0 -5825686 true "" ""
+
+MONITOR
+5
+560
+62
+605
+Deaths
+num-turtles - count turtles
+17
+1
+11
+
+MONITOR
+77
+560
+193
+605
+NIL
+max-infected-prop
+17
+1
+11
+
+SLIDER
+6
+240
+178
+273
+sickle-cell-rate
+sickle-cell-rate
+0
+1
+0.08
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+183
+239
+355
+272
+sickle-cell-protection
+sickle-cell-protection
+0
+1
+0.6
+0.01
+1
+NIL
+HORIZONTAL
+
+MONITOR
+205
+561
+359
+606
+Sickle Cell Observed Rate
+(count humans with [sc1?] + count humans with [sc2?] + count apes with [sc1?] + count apes with [sc2?]) / (count humans + count apes)
+4
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
