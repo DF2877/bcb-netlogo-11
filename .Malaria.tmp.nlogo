@@ -113,91 +113,71 @@ to go
   or (ticks >= when-stop?)
   [stop]
 
-
   move
+
+  recover-infected
+  recolor
+
   calculate-max-infected
   tick
 end
 
-to infect-susceptibles
-  if infected?
+to infect-susceptibles ;called by mosquitos when biting
+  if infected? ;if infected, chance to infect ape
     [ ask apes-here with [ not infected? and not immune? ]
      [ if random-float 1 < transmissibility
         [ set infected? true ] ] ]
-  if infected?
+  if infected? ;if infected, chance to infect human
     [ ask humans-here with [ not infected? and not immune? ]
      [ if random-float 1 < transmissibility
         [ set infected? true ] ] ]
-  if count humans-here with [infected?] > 0
+  if count humans-here with [infected?] > 0 ;if biting an infected human, chance to be infected
     [ if not infected? and not immune?
      [ if random-float 1 < transmissibility
         [ set infected? true ] ] ]
-  if count apes-here with [infected?] > 0
+  if count apes-here with [infected?] > 0 ;if biting an infected ape, chance to be infected
     [ if not infected? and not immune?
      [ if random-float 1 < transmissibility
         [ set infected? true ] ] ]
 end
 
-to recover-infected ;;I -> R
+to recover-infected
   ask humans with [infected?]
-  [
-    ifelse sc1? and sc2? [
-      set death-chance (random-float 1) * (1 - sickle-cell-protection)
-    ] [
-      ifelse sc1? or sc2? [
-        set death-chance (random-float 1) / (1 - sickle-cell-protection)
-      ] [
-        set death-chance random-float 1
-      ]
-    ]
-    if death-chance <  death-rate [
-      set deaths deaths + 1
-      die]
-    if random-float 1 < recovery-rate
-    [
-      set infected? false
-      ifelse immunity-is-acquired?
-      [
-        set immune? true
-        set color gray
-      ]
-      [
-        set color white
-      ]
-    ]
-  ]
+  [r-i-shared]
   ask apes with [infected?]
-  [
-    ifelse sc1? and sc2? [
-      set death-chance (random-float 1) * (1 - sickle-cell-protection)
-    ] [
-      ifelse sc1? or sc2? [
-        set death-chance (random-float 1) / (1 - sickle-cell-protection)
-      ] [
-        set death-chance random-float 1
-      ]
-    ]
-    if death-chance <  death-rate [
-      set deaths deaths + 1
-      die]
-    if random-float 1 < recovery-rate
-    [
-      set infected? false
-      ifelse immunity-is-acquired?
-      [
-        set immune? true
-        set color gray
-      ]
-      [
-        set color white
-      ]
-    ]
-  ]
+  [r-i-shared]
   ask mosquitos with [infected?]
   [
     if random-float 1 < recovery-rate
     [
       set infected? false
+      set color white
+    ]
+  ]
+end
+
+to r-i-shared
+  ifelse sc1? and sc2? [ ;if turtle has both genes mutated, sickle cell disease increases the risk of death
+    set death-chance (random-float 1) * (1 - sickle-cell-protection) ;we were unable to find a credible value for this, so we made it symetrical to the protection of a single mutant
+  ] [
+    ifelse sc1? or sc2? [ ;if the turtle only has one mutant gene, sickle cell trait reduces the risk of death
+      set death-chance (random-float 1) / (1 - sickle-cell-protection)
+    ] [
+      set death-chance random-float 1 ;if no sickle cell mutations, use a default death chance
+    ]
+  ]
+  if death-chance <  death-rate [
+    set deaths deaths + 1
+    die]
+  if random-float 1 < recovery-rate
+  [
+    set infected? false
+    ifelse immunity-is-acquired?
+    [
+      set immune? true
+      set color gray
+    ]
+    [
       set color white
     ]
   ]
@@ -210,7 +190,7 @@ to recolor
 end
 
 
-to move ;; call individual species movement
+to move ;; call individual breed movement
   move-humans
   move-apes
   move-mosquitos
@@ -218,15 +198,15 @@ end
 
 to move-humans
   ask humans [
-    ifelse infected? [set return-rate 0.03] [set return-rate 0.02]
+    ifelse infected? [set return-rate 0.03] [set return-rate 0.02] ;increase rate of return when infected, simulating debilitation. Makes infected turtles less likely to wander away from the habitat
     ifelse (random-float 1) > return-rate [
       ifelse pcolor = brown
-      [right (random 181) - 90
+      [right (random 181) - 90 ;if in town, wiggle
         forward 0.25]
-      [right (random 11) - 5
+      [right (random 11) - 5 ;if not in town, walk somewhere
         forward 0.5]
     ] [
-      facexy -13 -13
+      facexy -13 -13 ;occasionally turn back towards town
       forward 0.25
     ]
 
@@ -235,48 +215,43 @@ end
 
 to move-apes
   ask apes [
-    ifelse infected? [set return-rate 0.03] [set return-rate 0.02]
+    ifelse infected? [set return-rate 0.03] [set return-rate 0.02] ;increase rate of return when infected, simulating debilitation. Makes infected turtles less likely to wander away from the habitat
     ifelse (random-float 1) > return-rate [
       ifelse pcolor = green
-      [right (random 181) - 90
+      [right (random 181) - 90 ;if in forest, wiggle
         forward 0.25]
-      [right (random 11) - 5
+      [right (random 11) - 5 ;if not in forest, walk somewhere
         forward 0.5]
     ] [
-      facexy 13 13
+      facexy 13 13 ;occasionally turn back towards forest
       forward 0.25
     ]
   ]
 end
 
-to find-prey
+to find-nearest-prey
   set prey other turtles with [not member? self mosquitos]
-end
-
-to find-nearest-prey ;; turtle procedure
-  find-prey
   set nearest-prey min-one-of prey [distance myself]
 end
 
 to move-mosquitos
   ask mosquitos [
-    ifelse hungry? [
+    ifelse hungry? [ ;if hungry, hunt. Does not account for mosquito breeding cycles
       find-nearest-prey
       face nearest-prey
       forward 1
       feed
-    ] [
+    ] [ ;if not hungry, bumble around like an idiot, as flying insects tend to do
       right (random 91) - 45
       forward 0.75
       if (random-float 1) < 0.05 [set hungry? true]
     ]
-
   ]
 end
 
 to feed
   if distance nearest-prey < 1 [
-    if (random-float 1) > 0.5 [
+
       set hungry? false
       infect-susceptibles
     ]
