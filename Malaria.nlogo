@@ -1,23 +1,23 @@
 globals [
-  deaths
-  num-turtles
-  max-infected
+  deaths ;death counter
+  num-turtles ;total number of turtles at the beginning of the simulation, used for calculating proportions (mostly for graphing)
+  max-infected ;peak infection number
 ]
 
 breed [humans human]
-breed [apes ape]
-breed [mosquitos mosquito]
+breed [apes ape] ;maaria originates from apes, so we'll start the infected here
+breed [mosquitos mosquito] ;transmit malaria
 
 turtles-own [
-  infected?
-  immune?
-  prey
-  nearest-prey
-  hungry?
-  return-rate
-  sc1?
-  sc2?
-  death-chance
+  infected? ;is this turtle infected?
+  immune? ;is this turtle immune? Happens after recovering from an infection
+  prey ;agentset containing prey options, only used by mosquitos
+  nearest-prey ;which prey is closest, only used by mosquitos
+  hungry? ;is the turtle hungry? Only used by mosquitos
+  return-rate ;how frequently will this turtle attempt to return to its habitat? Only used by humans and apes
+  sc1? ;one copy of the hemoglobin gene. Does it have the sickle cell mutation? Only used by humans and apes. Apes can have sickle cell mutations
+  sc2? ;another copy of the hemoglobin gene, because humans and apes have two copies. Does this one have the sickle cell mutation? Only used by humans and apes
+  death-chance ;chance to die, randomized per tick, adjusted by sickle cell mutations, compared against death-rate to determine turtle death
 ]
 
 to setup
@@ -33,12 +33,12 @@ to setup
 end
 
 to setup-patches
-  ask patch 13 13 [
+  ask patch 13 13 [ ;create 'forest' habitat, where apes will prefer to stay
     ask n-of 400 patches in-radius 12 [
       set pcolor green
     ]
   ]
-  ask patch -13 -13 [
+  ask patch -13 -13 [ ;create 'town' habitat, where people will prefer to stay
     ask n-of 400 patches in-radius 12 [
       set pcolor brown
     ]
@@ -60,7 +60,7 @@ end
 to setup-apes
   create-apes num-apes [
     set color white
-    set shape "squirrel"
+    set shape "squirrel" ;couldn't find a monkey sprite, so we chose another arboreal creature
     set infected? false
     set immune? false
     ifelse (random-float 1) < sickle-cell-rate [set sc1? true] [set sc1? false]
@@ -72,7 +72,7 @@ end
 to setup-mosquitos
   create-mosquitos num-mosquitos [
     set color white
-    set shape "default"
+    set shape "default" ;couldn't find a mosquito sprite, so we went with a basic arrow because its flying and nothing else made sense
     set infected? false
     set immune? false
     set hungry? false
@@ -82,25 +82,42 @@ to setup-mosquitos
   ]
 end
 
-to setup-infected
+to setup-infected ;infect a few apes
   ask n-of init-infected apes [
    set color red
    set infected? true
   ]
 end
 
+to default   ; set default values, based on real world numbers observed
+  set num-people 100
+  set num-apes 100
+  set num-mosquitos 50
+  set init-infected 10
+  set transmissibility 0.32 ;the chance each time a mosquito bites that the disease will spread (either direction)
+  set when-stop? 5000
+  set recovery-rate 0.001 ;the ratio of death-recovery determines the likelyhood of a turtle dying vs recovering
+  set death-rate 0.003 ;the absolute magnitude of these values only affects the speed at which that happens
+  set immunity-is-acquired? TRUE
+  set sickle-cell-rate 0.08 ;the frequency with which a single gene will have the sickle cell mutation. The chance for both genes to be mutated is this number squared
+  set sickle-cell-protection 0.6 ;the amount of protection offered by a single copy of the gene. Death chance will be divided by 1 minus this, so higher values confer greater protection
+end
+
+
 to go
-  ;;stop if everyone or noone is infected
+  ;;stop if everyone or no one is infected, or if an entire species perishes
   if (count turtles with [infected?] = 0)
   or (count turtles with [infected?] = count turtles)
-  or (ticks = 5000)
+  or (count humans = 0)
+  or (count apes = 0)
+  or (ticks >= when-stop?)
   [stop]
 
-  ;infect-susceptibles
+  move
+
   recover-infected
   recolor
 
-  move
   calculate-max-infected
   tick
 end
@@ -128,15 +145,15 @@ to recover-infected ;;I -> R
   ask humans with [infected?]
   [
     ifelse sc1? and sc2? [
-      set death-chance (random-float 1) / sickle-cell-protection
+      set death-chance (random-float 1) * (1 - sickle-cell-protection)
     ] [
       ifelse sc1? or sc2? [
-        set death-chance (random-float 1) * sickle-cell-protection
+        set death-chance (random-float 1) / (1 - sickle-cell-protection)
       ] [
         set death-chance random-float 1
       ]
     ]
-    if death-chance > (1 - death-rate) [
+    if death-chance <  death-rate [
       set deaths deaths + 1
       die]
     if random-float 1 < recovery-rate
@@ -154,7 +171,16 @@ to recover-infected ;;I -> R
   ]
   ask apes with [infected?]
   [
-    if random-float 1 < death-rate [
+    ifelse sc1? and sc2? [
+      set death-chance (random-float 1) * (1 - sickle-cell-protection)
+    ] [
+      ifelse sc1? or sc2? [
+        set death-chance (random-float 1) / (1 - sickle-cell-protection)
+      ] [
+        set death-chance random-float 1
+      ]
+    ]
+    if death-chance <  death-rate [
       set deaths deaths + 1
       die]
     if random-float 1 < recovery-rate
@@ -362,7 +388,7 @@ HORIZONTAL
 SLIDER
 4
 178
-176
+96
 211
 init-infected
 init-infected
@@ -375,10 +401,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-183
-179
+196
+178
 355
-212
+211
 transmissibility
 transmissibility
 0
@@ -439,7 +465,7 @@ HORIZONTAL
 SWITCH
 184
 137
-358
+355
 170
 immunity-is-acquired?
 immunity-is-acquired?
@@ -531,6 +557,38 @@ Sickle Cell Observed Rate
 4
 1
 11
+
+SLIDER
+100
+178
+192
+211
+when-stop?
+when-stop?
+0
+10000
+5000.0
+500
+1
+NIL
+HORIZONTAL
+
+BUTTON
+256
+12
+356
+45
+Set Defaults
+default
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
