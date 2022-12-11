@@ -2,6 +2,8 @@ globals [
   deaths ;death counter
   num-turtles ;total number of turtles at the beginning of the simulation, used for calculating proportions (mostly for graphing)
   max-infected ;peak infection number
+  first-human-x ;the coordinates of the first human to be infected, only for curiosity
+  first-human-y
 ]
 
 breed [humans human]
@@ -30,6 +32,8 @@ to setup
   setup-infected
   set num-turtles (num-people + num-apes + num-mosquitos)
   set max-infected (count turtles with [infected?])
+  set first-human-x 99999
+  set first-human-y 99999
 end
 
 to setup-patches
@@ -130,7 +134,12 @@ to infect-susceptibles ;called by mosquitos when biting
   if infected? ;if infected, chance to infect human
     [ ask humans-here with [ not infected? and not immune? ]
      [ if random-float 1 < transmissibility
-        [ set infected? true ] ] ]
+        [ set infected? true ]
+        if first-human-x = 99999 [
+          set first-human-x [xcor] of self
+          set first-human-y [ycor] of self
+        ]
+  ] ]
   if count humans-here with [infected?] > 0 ;if biting an infected human, chance to be infected
     [ if not infected? and not immune?
      [ if random-float 1 < transmissibility
