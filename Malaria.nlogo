@@ -101,7 +101,7 @@ to default   ; set default values, based on real world numbers observed
   set transmissibility 0.32 ;the chance each time a mosquito bites that the disease will spread (either direction)
   set when-stop? 5000
   set recovery-rate 0.001 ;the ratio of death-recovery determines the likelyhood of a turtle dying vs recovering
-  set death-rate 0.003 ;the absolute magnitude of these values only affects the speed at which that happens
+  set death-rate 0.0005 ;the absolute magnitude of these values only affects the speed at which that happens
   set immunity-is-acquired? TRUE
   set sickle-cell-rate 0.08 ;the frequency with which a single gene will have the sickle cell mutation. The chance for both genes to be mutated is this number squared
   set sickle-cell-protection 0.6 ;the amount of protection offered by a single copy of the gene. Death chance will be divided by 1 minus this, so higher values confer greater protection
