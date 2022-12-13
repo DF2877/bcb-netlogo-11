@@ -274,6 +274,10 @@ end
 to-report max-infected-prop
   report max-infected / num-turtles
 end
+
+to-report sickle-cell-observed-rate
+  report (count humans with [sc1?] + count humans with [sc2?] + count apes with [sc1?] + count apes with [sc2?]) / (count humans + count apes)
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 370
@@ -531,8 +535,8 @@ MONITOR
 561
 359
 606
-Sickle Cell Observed Rate
-(count humans with [sc1?] + count humans with [sc2?] + count apes with [sc1?] + count apes with [sc2?]) / (count humans + count apes)
+NIL
+sickle-cell-observed-rate
 4
 1
 11
@@ -931,6 +935,55 @@ NetLogo 6.3.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="10" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>deaths</metric>
+    <metric>max-infected-prop</metric>
+    <metric>sickle-cell-observed-rate</metric>
+    <metric>first-human-x</metric>
+    <metric>first-human-y</metric>
+    <enumeratedValueSet variable="transmissibility">
+      <value value="0.32"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="sickle-cell-protection">
+      <value value="0.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="recovery-rate">
+      <value value="0.001"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-apes">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-mosquitos">
+      <value value="25"/>
+      <value value="50"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-infected">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="sickle-cell-rate">
+      <value value="0.02"/>
+      <value value="0.08"/>
+      <value value="0.25"/>
+      <value value="0.5"/>
+      <value value="0.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="death-rate">
+      <value value="0.003"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="when-stop?">
+      <value value="5000"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="immunity-is-acquired?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-people">
+      <value value="100"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
